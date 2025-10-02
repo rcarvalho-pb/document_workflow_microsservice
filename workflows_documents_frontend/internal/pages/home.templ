@@ -1,0 +1,11 @@
+package pages
+
+import "github.com/rcarvalho-pb/workflows-document_frontend/internal/pages/components"
+
+templ HomePage() {
+	@components.Base() {
+		@components.Header()
+		<h1>Home</h1>
+		@components.Footer()
+	}
+}
