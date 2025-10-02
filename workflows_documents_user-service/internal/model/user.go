@@ -58,7 +58,7 @@ type (
 )
 
 func validateEmail(value string) error {
-	re := regexp.MustCompile(`([\w])+@([\a]+).([\a]{2,5})([.][\a]{2,5})?`)
+	re := regexp.MustCompile(`([\w])+@([\w]+)(.[\w]{2,})(.([\w]{2,}))?$`)
 	if !re.MatchString(value) {
 		return ErrUserInvalidEmail
 	}

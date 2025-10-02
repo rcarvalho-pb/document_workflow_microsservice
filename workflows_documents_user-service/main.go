@@ -12,7 +12,7 @@ func main() {
 			log.Println("erro ao criar user:", r)
 		}
 	}()
-	user := (&model.UserBuilder{}).
+	user, _ := (&model.UserBuilder{}).
 		WithName("Ramon").
 		WithLastName("Carvalho").
 		WithPassword("123").
