@@ -45,7 +45,7 @@ type (
 		actions []userMod
 	}
 	User struct {
-		ID        int    `db:"id"`
+		ID        int64  `db:"id"`
 		Name      string `db:"name"`
 		LastName  string `db:"last_name"`
 		Email     string `db:"email"`
