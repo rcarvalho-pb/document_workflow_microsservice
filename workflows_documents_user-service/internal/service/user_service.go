@@ -1,13 +1,27 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/dto"
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/model"
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/security"
 )
 
+type ErrUserService error
+
+var (
+	ErrUserAlreadyDeactivated = errors.New("user already deactivated")
+	ErrUserAlreadyActivated   = errors.New("user already activated")
+	ErrUserIncorrectPassword  = errors.New("incorrect password")
+)
+
 type UserService struct {
 	Repository model.UserRepository
+}
+
+func NewUserService(repo model.UserRepository) *UserService {
+	return &UserService{repo}
 }
 
 func (s *UserService) Save(userDTO *dto.UserDTO) (int64, error) {
@@ -86,6 +100,37 @@ func (s *UserService) DeactivateUserByID(id int64) error {
 	if err != nil {
 		return err
 	}
+	if !user.Active {
+		return ErrUserAlreadyDeactivated
+	}
 	user.Active = false
+	return s.Repository.Update(user)
+}
+
+func (s *UserService) ReactivateUserByID(id int64) error {
+	user, err := s.Repository.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if user.Active {
+		return ErrUserAlreadyActivated
+	}
+	user.Active = true
+	return s.Repository.Update(user)
+}
+
+func (s *UserService) UpdatePassword(id int64, changePassword *dto.ChangePassword) error {
+	user, err := s.Repository.FindByID(id)
+	if err != nil {
+		return err
+	}
+	if !security.CheckPassword(changePassword.Password, user.Password) {
+		return ErrUserIncorrectPassword
+	}
+	hashedNewPassword, err := security.Hash(changePassword.NewPassword)
+	if err != nil {
+		return err
+	}
+	user.Password = hashedNewPassword
 	return s.Repository.Update(user)
 }

@@ -2,14 +2,21 @@ package dto
 
 import "github.com/rcarvalho-pb/workflows-document_user-service/internal/model"
 
-type UserDTO struct {
-	ID       int64  `json:"id,omitempty"`
-	Name     string `json:"name"`
-	LastName string `json:"last_name"`
-	Email    string `json:"email"`
-	Password string `json:"password,omitempty"`
-	Role     string `json:"role"`
-}
+type (
+	UserDTO struct {
+		ID       int64  `json:"id,omitempty"`
+		Name     string `json:"name"`
+		LastName string `json:"last_name"`
+		Email    string `json:"email"`
+		Password string `json:"password,omitempty"`
+		Role     string `json:"role"`
+	}
+
+	ChangePassword struct {
+		Password    string `json:"password"`
+		NewPassword string `json:"new_password"`
+	}
+)
 
 func (u UserDTO) ToUserModel() (*model.User, error) {
 	ub := model.UserBuilder{}
