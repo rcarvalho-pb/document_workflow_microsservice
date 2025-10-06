@@ -15,7 +15,7 @@ func (db *DB) Save(user *model.User) (int64, error) {
 		VALUES
 		(:name, :last_name, :email, :password, :role, :created_at, :updated_at, :active)`
 
-	result, err := db.db.NamedExecContext(ctx, stmt, user)
+	result, err := db.NamedExecContext(ctx, stmt, user)
 	if err != nil {
 		return 0, err
 	}
@@ -35,7 +35,7 @@ func (db *DB) Update(user *model.User) error {
 	name = :name, last_name = :last_name, email = :email, password = :password, role = :role, updated_at = :updated_at, active = :active
 	WHERE id = :id`
 
-	if _, err := db.db.NamedExecContext(ctx, stmt, user); err != nil {
+	if _, err := db.NamedExecContext(ctx, stmt, user); err != nil {
 		return err
 	}
 	return nil
@@ -48,7 +48,7 @@ func (db *DB) FindByID(id int64) (*model.User, error) {
 	query := `SELECT * FROM tb_users WHERE id = ?`
 
 	user := new(model.User)
-	if err := db.db.GetContext(ctx, user, query, id); err != nil {
+	if err := db.GetContext(ctx, user, query, id); err != nil {
 		return nil, err
 	}
 	return user, nil
@@ -61,7 +61,7 @@ func (db *DB) FindByEmail(email string) (*model.User, error) {
 	query := `SELECT * FROM tb_users WHERE email = ?`
 
 	user := new(model.User)
-	if err := db.db.GetContext(ctx, user, query, email); err != nil {
+	if err := db.GetContext(ctx, user, query, email); err != nil {
 		return nil, err
 	}
 	return user, nil
@@ -75,7 +75,7 @@ func (db *DB) FindByName(name string) ([]*model.User, error) {
 
 	users := make([]*model.User, 0)
 
-	if err := db.db.SelectContext(ctx, users, query, name); err != nil {
+	if err := db.SelectContext(ctx, users, query, name); err != nil {
 		return nil, err
 	}
 

@@ -10,12 +10,7 @@ import (
 
 func TestCreateUser(t *testing.T) {
 	now := time.Now().Unix()
-	ub := model.UserBuilder{}
-	user, err := ub.
-		WithName(" Ramon ").
-		WithLastName("Almeida de Carvalho ").
-		WithEmail("ramon@email.com").
-		WithPassword("123").Build()
+	user, err := model.NewUser("Ramon", "Almeida de Carvalho", "ramon@email.com", "123")
 	assert.Nil(t, err)
 	assert.Equal(t, "Ramon", user.Name)
 	assert.Equal(t, "Almeida de Carvalho", user.LastName)
@@ -23,15 +18,10 @@ func TestCreateUser(t *testing.T) {
 	assert.True(t, now <= user.CreatedAt)
 	assert.True(t, now <= user.UpdatedAt)
 	assert.True(t, user.Active)
-	ub = model.UserBuilder{}
-	user2, err := ub.
-		WithName(" Emilly ").
-		WithLastName("Almeida de Carvalho ").
-		WithEmail("ramon@email.com.br.").
-		WithPassword("123").Build()
-	assert.Error(t, err)
+	user2, err := model.NewUser("Emilly", "Almeida de Carvalho", "ramon@email.com.", "123")
 	assert.Nil(t, user2)
+	assert.Error(t, err)
 	lastUpdatedTime := user.UpdatedAt
-	user.UpdateUserTime()
+	user.DeactivateUser()
 	assert.True(t, lastUpdatedTime <= user.UpdatedAt, "user update time funcion working")
 }

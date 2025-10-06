@@ -11,11 +11,11 @@ import (
 const dbTimeout = 10 * time.Second
 
 type DB struct {
-	db *sqlx.DB
+	*sqlx.DB
 }
 
-func ConnectoToDB() *DB {
-	conn, err := sqlx.Open("sqlite3", "db/user_db.db")
+func ConnectoToDB(connectionString string) *DB {
+	conn, err := sqlx.Open("sqlite3", connectionString)
 	if err != nil {
 		log.Fatal(err)
 	}

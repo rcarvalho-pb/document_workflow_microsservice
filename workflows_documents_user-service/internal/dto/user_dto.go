@@ -9,7 +9,7 @@ type (
 		LastName string `json:"last_name"`
 		Email    string `json:"email"`
 		Password string `json:"password,omitempty"`
-		Role     string `json:"role"`
+		Role     string `json:"role,omitempty"`
 	}
 
 	ChangePassword struct {
@@ -18,21 +18,20 @@ type (
 	}
 )
 
-func (u UserDTO) ToUserModel() (*model.User, error) {
-	ub := model.UserBuilder{}
-	ub.
-		WithName(u.Name).
-		WithLastName(u.LastName).
-		WithEmail(u.Email).
-		WithRole(u.Role)
+func (u UserDTO) ToUserModel() *model.User {
+	user := &model.User{
+		Name:     u.Name,
+		LastName: u.LastName,
+		Email:    u.Email,
+		Password: u.Password,
+	}
 	if u.Password != "" {
-		ub.WithPassword(u.Password)
+		user.Password = u.Password
 	}
-	user, err := ub.Build()
-	if err != nil {
-		return nil, err
+	if u.Role != "" {
+		user.Role = model.ToRole(u.Role)
 	}
-	return user, err
+	return user
 }
 
 func FromUserModel(user *model.User) *UserDTO {

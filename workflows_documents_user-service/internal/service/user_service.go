@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"time"
 
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/dto"
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/model"
@@ -25,16 +26,14 @@ func NewUserService(repo model.UserRepository) *UserService {
 }
 
 func (s *UserService) Save(userDTO *dto.UserDTO) (int64, error) {
-	var err error
-	user, err := userDTO.ToUserModel()
-	if err != nil {
-		return 0, err
-	}
+	user := userDTO.ToUserModel()
 	hashedPassword, err := security.Hash(user.Password)
 	if err != nil {
 		return 0, err
 	}
 	user.Password = hashedPassword
+	now := time.Now().Unix()
+	user.CreatedAt, user.UpdatedAt, user.Active = now, now, true
 	id, err := s.Repository.Save(user)
 	if err != nil {
 		return 0, err
@@ -42,16 +41,13 @@ func (s *UserService) Save(userDTO *dto.UserDTO) (int64, error) {
 	return id, err
 }
 
-func (s *UserService) Update(id int64, userDTO *dto.UserDTO) error {
-	var err error
-	user, err := s.Repository.FindByID(id)
+func (s *UserService) Update(userDTO *dto.UserDTO) error {
+	user, err := s.Repository.FindByID(userDTO.ID)
 	if err != nil {
 		return err
 	}
-	updatedUser, err := userDTO.ToUserModel()
-	if err != nil {
-		return err
-	}
+	updatedUser := userDTO.ToUserModel()
+
 	if updatedUser.Name != "" {
 		user.Name = updatedUser.Name
 	}

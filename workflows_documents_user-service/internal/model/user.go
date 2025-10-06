@@ -19,43 +19,62 @@ var (
 type Role int
 
 const (
-	ADMIN Role = iota + 1
+	None Role = iota
+	ADMIN
 	EMPLOYEE
 	MANAGER
 	FINANCIAL
 )
 
-var roles = []string{"admin", "employee", "manager", "finantial"}
+var roles = []string{"none", "admin", "employee", "manager", "finantial"}
 
 func (r Role) String() string {
-	return roles[r-1]
+	return roles[r]
 }
 
 func ToRole(role string) Role {
-	index := Role(slices.Index(roles, role) + 1)
-	if index == 0 {
+	index := Role(slices.Index(roles, role))
+	if index == -1 {
 		panic("role inexistente")
 	}
 	return index
 }
 
-type (
-	userMod     func(*User)
-	UserBuilder struct {
-		actions []userMod
+type User struct {
+	ID        int64  `db:"id"`
+	Name      string `db:"name"`
+	LastName  string `db:"last_name"`
+	Email     string `db:"email"`
+	Password  string `db:"password"`
+	Role      Role   `db:"role"`
+	CreatedAt int64  `db:"created_at"`
+	UpdatedAt int64  `db:"updated_at"`
+	Active    bool   `db:"active"`
+}
+
+func NewUser(name, lastName, email, password string, role ...Role) (*User, error) {
+	normalizedEmail := normalizeInput(email)
+	if err := validateEmail(normalizedEmail); err != nil {
+		return nil, err
 	}
-	User struct {
-		ID        int64  `db:"id"`
-		Name      string `db:"name"`
-		LastName  string `db:"last_name"`
-		Email     string `db:"email"`
-		Password  string `db:"password"`
-		Role      Role   `db:"role"`
-		CreatedAt int64  `db:"created_at"`
-		UpdatedAt int64  `db:"updated_at"`
-		Active    bool   `db:"active"`
+	var userRole Role
+	if len(role) > 0 {
+		userRole = role[0]
+	} else {
+		userRole = EMPLOYEE
 	}
-)
+	now := time.Now().Unix()
+	return &User{
+		Name:      normalizeInput(name),
+		LastName:  normalizeInput(lastName),
+		Email:     normalizedEmail,
+		Password:  normalizeInput(password),
+		Role:      userRole,
+		CreatedAt: now,
+		UpdatedAt: now,
+		Active:    true,
+	}, nil
+}
 
 func validateEmail(value string) error {
 	re := regexp.MustCompile(`([\w])+@([\w]+)(.[\w]{2,})(.([\w]{2,}))?$`)
@@ -65,10 +84,8 @@ func validateEmail(value string) error {
 	return nil
 }
 
-func (u *User) NormalizeUser() {
-	u.Name = strings.TrimSpace(u.Name)
-	u.LastName = strings.TrimSpace(u.LastName)
-	u.Email = strings.TrimSpace(u.Email)
+func normalizeInput(input string) string {
+	return strings.TrimSpace(input)
 }
 
 func (u *User) DeactivateUser() error {
@@ -93,67 +110,4 @@ func (u *User) ReactivateUser() error {
 
 func (u *User) UpdateUserTime() {
 	u.UpdatedAt = time.Now().Unix()
-}
-
-func (ub *UserBuilder) Build() (*User, error) {
-	now := time.Now().Unix()
-	u := &User{
-		CreatedAt: now,
-		UpdatedAt: now,
-		Active:    true,
-	}
-	for _, a := range ub.actions {
-		a(u)
-	}
-	u.NormalizeUser()
-	if err := validateEmail(u.Email); err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-func (b *UserBuilder) WithName(value string) *UserBuilder {
-	b.actions = append(b.actions, func(u *User) {
-		u.Name = value
-	})
-	return b
-}
-
-func (b *UserBuilder) WithLastName(value string) *UserBuilder {
-	b.actions = append(b.actions, func(u *User) {
-		u.LastName = value
-	})
-	return b
-}
-
-func (b *UserBuilder) WithEmail(value string) *UserBuilder {
-	b.actions = append(b.actions, func(u *User) {
-		u.Email = value
-	})
-	return b
-}
-
-func (b *UserBuilder) WithPassword(value string) *UserBuilder {
-	b.actions = append(b.actions, func(u *User) {
-		u.Password = value
-	})
-	return b
-}
-
-func (b *UserBuilder) WithRole(value ...any) *UserBuilder {
-	b.actions = append(b.actions, func(u *User) {
-		if len(value) == 0 {
-			u.Role = Role(2)
-		} else {
-			switch v := value[0].(type) {
-			case int:
-				u.Role = Role(v)
-			case string:
-				u.Role = ToRole(v)
-			default:
-				panic("invalid role type")
-			}
-		}
-	})
-	return b
 }
