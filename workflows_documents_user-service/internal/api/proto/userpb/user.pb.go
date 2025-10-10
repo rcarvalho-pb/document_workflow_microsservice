@@ -303,7 +303,6 @@ func (x *UpdateUserRequest) GetRole() string {
 
 type UpdateUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -336,13 +335,6 @@ func (x *UpdateUserResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use UpdateUserResponse.ProtoReflect.Descriptor instead.
 func (*UpdateUserResponse) Descriptor() ([]byte, []int) {
 	return file_internal_api_proto_user_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *UpdateUserResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
 }
 
 type FindUserByIDRequest struct {
@@ -567,7 +559,6 @@ func (x *ActivateUserRequest) GetId() int64 {
 
 type ActivateUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -600,13 +591,6 @@ func (x *ActivateUserResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ActivateUserResponse.ProtoReflect.Descriptor instead.
 func (*ActivateUserResponse) Descriptor() ([]byte, []int) {
 	return file_internal_api_proto_user_proto_rawDescGZIP(), []int{10}
-}
-
-func (x *ActivateUserResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
 }
 
 type DeactivateUserRequest struct {
@@ -655,7 +639,6 @@ func (x *DeactivateUserRequest) GetId() int64 {
 
 type DeactivateUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -690,17 +673,11 @@ func (*DeactivateUserResponse) Descriptor() ([]byte, []int) {
 	return file_internal_api_proto_user_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *DeactivateUserResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 type UpdateUserPasswordRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	OldPassword   string                 `protobuf:"bytes,1,opt,name=oldPassword,proto3" json:"oldPassword,omitempty"`
-	NewPassword   string                 `protobuf:"bytes,2,opt,name=newPassword,proto3" json:"newPassword,omitempty"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	OldPassword   string                 `protobuf:"bytes,2,opt,name=oldPassword,proto3" json:"oldPassword,omitempty"`
+	NewPassword   string                 `protobuf:"bytes,3,opt,name=newPassword,proto3" json:"newPassword,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -735,6 +712,13 @@ func (*UpdateUserPasswordRequest) Descriptor() ([]byte, []int) {
 	return file_internal_api_proto_user_proto_rawDescGZIP(), []int{13}
 }
 
+func (x *UpdateUserPasswordRequest) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
 func (x *UpdateUserPasswordRequest) GetOldPassword() string {
 	if x != nil {
 		return x.OldPassword
@@ -751,7 +735,6 @@ func (x *UpdateUserPasswordRequest) GetNewPassword() string {
 
 type UpdateUserPasswordResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Message       string                 `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -786,13 +769,6 @@ func (*UpdateUserPasswordResponse) Descriptor() ([]byte, []int) {
 	return file_internal_api_proto_user_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *UpdateUserPasswordResponse) GetMessage() string {
-	if x != nil {
-		return x.Message
-	}
-	return ""
-}
-
 var File_internal_api_proto_user_proto protoreflect.FileDescriptor
 
 const file_internal_api_proto_user_proto_rawDesc = "" +
@@ -818,9 +794,8 @@ const file_internal_api_proto_user_proto_rawDesc = "" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
 	"\blastName\x18\x03 \x01(\tR\blastName\x12\x14\n" +
 	"\x05email\x18\x04 \x01(\tR\x05email\x12\x12\n" +
-	"\x04role\x18\x05 \x01(\tR\x04role\".\n" +
-	"\x12UpdateUserResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"%\n" +
+	"\x04role\x18\x05 \x01(\tR\x04role\"\x14\n" +
+	"\x12UpdateUserResponse\"%\n" +
 	"\x13FindUserByIDRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\".\n" +
 	"\x16FindUserByEmailRequest\x12\x14\n" +
@@ -831,18 +806,16 @@ const file_internal_api_proto_user_proto_rawDesc = "" +
 	"\x05users\x18\x01 \x03(\v2\n" +
 	".user.UserR\x05users\"%\n" +
 	"\x13ActivateUserRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"0\n" +
-	"\x14ActivateUserResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"'\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"\x16\n" +
+	"\x14ActivateUserResponse\"'\n" +
 	"\x15DeactivateUserRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\x03R\x02id\"2\n" +
-	"\x16DeactivateUserResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage\"_\n" +
-	"\x19UpdateUserPasswordRequest\x12 \n" +
-	"\voldPassword\x18\x01 \x01(\tR\voldPassword\x12 \n" +
-	"\vnewPassword\x18\x02 \x01(\tR\vnewPassword\"6\n" +
-	"\x1aUpdateUserPasswordResponse\x12\x18\n" +
-	"\amessage\x18\x01 \x01(\tR\amessage2\xbd\x04\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"\x18\n" +
+	"\x16DeactivateUserResponse\"o\n" +
+	"\x19UpdateUserPasswordRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12 \n" +
+	"\voldPassword\x18\x02 \x01(\tR\voldPassword\x12 \n" +
+	"\vnewPassword\x18\x03 \x01(\tR\vnewPassword\"\x1c\n" +
+	"\x1aUpdateUserPasswordResponse2\xbd\x04\n" +
 	"\vUserService\x12?\n" +
 	"\n" +
 	"CreateUser\x12\x17.user.CreateUserRequest\x1a\x18.user.CreateUserResponse\x12K\n" +

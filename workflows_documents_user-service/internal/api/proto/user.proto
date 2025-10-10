@@ -33,7 +33,6 @@ message UpdateUserRequest {
 }
 
 message UpdateUserResponse {
-  string message = 1;
 }
 
 message FindUserByIDRequest {
@@ -57,7 +56,6 @@ message ActivateUserRequest {
 }
 
 message ActivateUserResponse {
-  string message = 1;
 }
 
 message DeactivateUserRequest {
@@ -65,16 +63,15 @@ message DeactivateUserRequest {
 }
 
 message DeactivateUserResponse {
-  string message = 1;
 }
 
 message UpdateUserPasswordRequest {
-  string oldPassword = 1;
-  string newPassword = 2;
+  int64 id = 1;
+  string oldPassword = 2;
+  string newPassword = 3;
 }
 
 message UpdateUserPasswordResponse {
-  string message = 1;
 }
 
 service UserService {

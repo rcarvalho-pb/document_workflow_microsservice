@@ -1,26 +1,32 @@
 package main
 
 import (
+	"context"
 	"log"
+	"time"
 
-	"github.com/rcarvalho-pb/workflows-document_user-service/internal/dto"
-	"github.com/rcarvalho-pb/workflows-document_user-service/internal/model"
+	"github.com/rcarvalho-pb/workflows-document_user-service/internal/adapter/repository/sqlite3"
+	"github.com/rcarvalho-pb/workflows-document_user-service/internal/api"
+	"github.com/rcarvalho-pb/workflows-document_user-service/internal/api/proto/userpb"
+	"github.com/rcarvalho-pb/workflows-document_user-service/internal/service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("erro ao criar user:", r)
-		}
-	}()
-	user, _ := model.NewUser("Ramon", "Carvalho", "ramon@email.com", "123", model.EMPLOYEE)
-	log.Printf("%T - %v\n", user, user)
-	userDTO := dto.UserDTO{
-		Name:     "Ramon",
-		LastName: "Carvalho",
-		Email:    "ramon@email.com",
-		Password: "123",
+	db := sqlite3.ConnectoToDB(":memory:")
+	userService := service.NewUserService(db)
+	userServer := api.UserGRPCServer{
+		UnimplementedUserServiceServer: userpb.UnimplementedUserServiceServer{},
+		service:                                               userService,
 	}
-	user2 := userDTO.ToUserModel()
-	log.Println(user2)
-}
+	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("failed to connect: %v\n", err)
+	}
+	defer conn.Close()
+
+	client := userpb.NewUserServiceClient(conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10tme.Second)
+	defer cancel()

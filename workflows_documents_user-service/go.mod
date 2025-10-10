@@ -8,10 +8,13 @@ tool (
 )
 
 require (
+	github.com/golang/protobuf v1.5.4
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.42.0
+	google.golang.org/grpc v1.75.1
+	google.golang.org/protobuf v1.36.8
 )
 
 require (
@@ -47,7 +50,5 @@ require (
 	golang.org/x/text v0.29.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
-	google.golang.org/grpc v1.75.1 // indirect
-	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
