@@ -8,7 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-const dbTimeout = 10 * time.Second
+const dbTimeout = 5 * time.Second
 
 type DB struct {
 	*sqlx.DB

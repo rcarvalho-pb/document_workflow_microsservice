@@ -1,32 +1,37 @@
 package main
 
 import (
-	"context"
 	"log"
-	"time"
 
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/adapter/repository/sqlite3"
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/api"
-	"github.com/rcarvalho-pb/workflows-document_user-service/internal/api/proto/userpb"
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/service"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 	db := sqlite3.ConnectoToDB(":memory:")
-	userService := service.NewUserService(db)
-	userServer := api.UserGRPCServer{
-		UnimplementedUserServiceServer: userpb.UnimplementedUserServiceServer{},
-		service:                                               userService,
-	}
-	conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	err := createTable(db)
 	if err != nil {
-		log.Fatalf("failed to connect: %v\n", err)
+		log.Fatal(err)
 	}
-	defer conn.Close()
+	userService := service.NewUserService(db)
+	grpcService := api.UserGRPCServer{}
+	grpcService.Run(userService)
+}
 
-	client := userpb.NewUserServiceClient(conn)
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10tme.Second)
-	defer cancel()
+func createTable(db *sqlite3.DB) error {
+	schema := `
+	CREATE TABLE IF NOT EXISTS tb_users (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		name TEXT,
+		last_name TEXT,
+		email TEXT UNIQUE,
+		password TEXT,
+		role INTEGER,
+		created_at INTEGER DEFAULT (strftime('%s', 'now')),
+		updated_at INTEGER DEFAULT (strftime('%s', 'now')),
+		active BOOLEAN DEFAULT 1
+	);`
+	_, err := db.Exec(schema)
+	return err
+}

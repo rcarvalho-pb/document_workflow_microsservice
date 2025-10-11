@@ -1,4 +1,4 @@
-package grpc
+package api
 
 import (
 	"context"
@@ -10,9 +10,10 @@ import (
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/dto"
 	"github.com/rcarvalho-pb/workflows-document_user-service/internal/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
-const servTimeout = 10 * time.Second
+const servTimeout = 2 * time.Second
 
 type UserGRPCServer struct {
 	userpb.UnimplementedUserServiceServer
@@ -79,10 +80,12 @@ func (s *UserGRPCServer) DeactivateUser(ctx context.Context, deactivateUserReque
 func (s *UserGRPCServer) ActivateUser(ctx context.Context, activateUserRequest *userpb.ActivateUserRequest) (*userpb.ActivateUserResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, servTimeout)
 	defer cancel()
-	done := make(chan error)
+	done := make(chan error, 1)
 	go func() {
-		err := s.UserService.DeactivateUserByID(activateUserRequest.GetId())
-		done <- err
+		select {
+		case done <- s.UserService.DeactivateUserByID(activateUserRequest.Id):
+		case <-ctx.Done():
+		}
 	}()
 	select {
 	case <-ctx.Done():
@@ -105,10 +108,9 @@ func (s *UserGRPCServer) UpdateUser(ctx context.Context, req *userpb.UpdateUserR
 			Email:    req.GetEmail(),
 			Role:     req.GetRole(),
 		}
-		err := s.UserService.Update(userDTO)
 		select {
-		case d one <- err:
-		case <-ct x.Done():
+		case done <- s.UserService.Update(userDTO):
+		case <-ctx.Done():
 		}
 	}()
 	select {
@@ -116,49 +118,158 @@ func (s *UserGRPCServer) UpdateUser(ctx context.Context, req *userpb.UpdateUserR
 		close(done)
 		return nil, ctx.Err()
 	case r := <-done:
-		return &userpb.UpdateUserResponse{}, r
+		if r != nil {
+			return nil, r
+		}
+		return &userpb.UpdateUserResponse{}, nil
 	}
 }
 
 func (s *UserGRPCServer) UpdateUserPassword(ctx context.Context, req *userpb.UpdateUserPasswordRequest) (*userpb.UpdateUserPasswordResponse, error) {
-	dto := &dto.ChangePassword{
-		Password:    req.GetOldPassword(),
-		NewPassword: req.GetNewPassword(),
+	ctx, cancel := context.WithTimeout(ctx, servTimeout)
+	defer cancel()
+	doneChan := make(chan error, 1)
+	go func() {
+		dto := &dto.ChangePassword{
+			Password:    req.GetOldPassword(),
+			NewPassword: req.GetNewPassword(),
+		}
+		err := s.UserService.UpdatePassword(req.GetId(), dto)
+		select {
+		case <-ctx.Done():
+		case doneChan <- err:
+		}
+	}()
+	select {
+	case <-ctx.Done():
+		close(doneChan)
+		return nil, ctx.Err()
+	case err := <-doneChan:
+		if err != nil {
+			return nil, err
+		}
+		return &userpb.UpdateUserPasswordResponse{}, nil
 	}
-	err := s.UserService.UpdatePassword(req.GetId(), dto)
-	if err != nil {
-		return nil, err
-	}
-	return &userpb.UpdateUserPasswordResponse{}, nil
 }
 
 func (s *UserGRPCServer) FindUserByID(ctx context.Context, req *userpb.FindUserByIDRequest) (*userpb.User, error) {
-	user, err := s.UserService.FindByID(req.GetId())
-	if err != nil {
-		return nil, err
+	ctx, cancel := context.WithTimeout(ctx, servTimeout)
+	defer cancel()
+	doneChan := make(chan struct {
+		user *dto.UserDTO
+		err  error
+	}, 1)
+	go func() {
+		user, err := s.UserService.FindByID(req.GetId())
+		select {
+		case doneChan <- struct {
+			user *dto.UserDTO
+			err  error
+		}{user, err}:
+		case <-ctx.Done():
+		}
+	}()
+	select {
+	case resp := <-doneChan:
+		if resp.err != nil {
+			return nil, resp.err
+		}
+		return &userpb.User{
+			Id:       resp.user.ID,
+			Name:     resp.user.Name,
+			LastName: resp.user.LastName,
+			Email:    resp.user.Email,
+			Role:     resp.user.Role,
+		}, nil
+	case <-ctx.Done():
+		return nil, ctx.Err()
 	}
-	return &userpb.User{
-		Id:       user.ID,
-		Name:     user.Name,
-		LastName: user.LastName,
-		Email:    user.Email,
-		Role:     user.Role,
-	}, nil
 }
 
 func (s *UserGRPCServer) FindUserByEmail(ctx context.Context, req *userpb.FindUserByEmailRequest) (*userpb.User, error) {
-	panic("not implemented") // TODO: Implement
+	ctx, cancel := context.WithTimeout(ctx, servTimeout)
+	defer cancel()
+	doneChan := make(chan struct {
+		user *dto.UserDTO
+		err  error
+	}, 1)
+	go func() {
+		user, err := s.UserService.FindByEmail(req.Email)
+		select {
+		case doneChan <- struct {
+			user *dto.UserDTO
+			err  error
+		}{user, err}:
+		case <-ctx.Done():
+		}
+	}()
+	select {
+	case resp := <-doneChan:
+		if resp.err != nil {
+			return nil, resp.err
+		}
+		return &userpb.User{
+			Id:       resp.user.ID,
+			Name:     resp.user.Name,
+			LastName: resp.user.LastName,
+			Email:    resp.user.Email,
+			Role:     resp.user.Role,
+		}, nil
+	case <-ctx.Done():
+		close(doneChan)
+		return nil, ctx.Err()
+	}
 }
 
 func (s *UserGRPCServer) FindUserByName(ctx context.Context, req *userpb.FindUserByNameRequest) (*userpb.FindUserByNameResponse, error) {
-	panic("not implemented") // TODO: Implement
+	ctx, cancel := context.WithTimeout(ctx, servTimeout)
+	defer cancel()
+	doneChan := make(chan struct {
+		users []*dto.UserDTO
+		err   error
+	}, 1)
+	go func() {
+		users, err := s.UserService.FindByName(req.Name)
+		select {
+		case <-ctx.Done():
+		case doneChan <- struct {
+			users []*dto.UserDTO
+			err   error
+		}{users, err}:
+		}
+	}()
+	select {
+	case <-ctx.Done():
+		close(doneChan)
+		return nil, ctx.Err()
+	case resp := <-doneChan:
+		if resp.err != nil {
+			return nil, resp.err
+		}
+		users := make([]*userpb.User, len(resp.users))
+		for i := range len(resp.users) {
+			users[i] = &userpb.User{
+				Id:       resp.users[i].ID,
+				Name:     resp.users[i].Name,
+				LastName: resp.users[i].LastName,
+				Email:    resp.users[i].Email,
+				Role:     resp.users[i].Role,
+			}
+		}
+		return &userpb.FindUserByNameResponse{Users: users}, nil
+	}
 }
 
-func (s *UserGRPCServer) Run() {
-	lis, err := net.Listen("tcp", ":8088")
+func (s *UserGRPCServer) Run(userService *service.UserService) {
+	lis, err := net.Listen("tcp", ":8089")
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err)
 	}
-
 	grpcServer := grpc.NewServer()
+	reflection.Register(grpcServer)
+	userpb.RegisterUserServiceServer(grpcServer, &UserGRPCServer{UserService: userService})
+	log.Println("server started on port: 8089")
+	if err := grpcServer.Serve(lis); err != nil {
+		log.Fatal(err)
+	}
 }

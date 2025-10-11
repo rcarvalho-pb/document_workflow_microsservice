@@ -75,7 +75,7 @@ func (db *DB) FindByName(name string) ([]*model.User, error) {
 
 	users := make([]*model.User, 0)
 
-	if err := db.SelectContext(ctx, users, query, name); err != nil {
+	if err := db.SelectContext(ctx, &users, query, name, name); err != nil {
 		return nil, err
 	}
 
